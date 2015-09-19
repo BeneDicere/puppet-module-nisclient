@@ -17,16 +17,25 @@ class nisclient(
           $default_package_name = 'ypbind'
 
           if $::lsbmajdistrelease == '6' {
-            include rpcbind
+            #include rpcbind
           }
         }
         'Suse': {
-          include rpcbind
+          #include rpcbind
           $default_package_name = 'ypbind'
         }
         'Debian': {
-          include rpcbind
           $default_package_name = 'nis'
+          case $::operatingsystem {
+            'Ubuntu': {
+              $default_service_name = 'ypbind'
+            }
+            'Debian': {
+              $default_service_name = 'nis'
+            }
+          }
+          #include rpcbind
+          
         }
         default: {
           fail("nisclient supports osfamilies Debian, RedHat, and Suse on the Linux kernel. Detected osfamily is <${::osfamily}>.")
@@ -70,12 +79,26 @@ class nisclient(
   } else {
     $service_enable = true
   }
-
-  service { 'nis_service':
-    ensure => $service_ensure,
-    name   => $my_service_name,
-    enable => $service_enable,
+  
+  # once again workaround for debian because there are ugly init scripts.
+  if $::operatingsystem == 'Debian' {
+    service { 'nis_service':
+      ensure    => $service_ensure,
+      name      => $my_service_name,
+      enable    => $service_enable,
+      hasstatus => false,
+      status    => 'start-stop-daemon  -T -n ypbind'
+    }  
+    
   }
+  else {
+    service { 'nis_service':
+      ensure => $service_ensure,
+      name   => $my_service_name,
+      enable => $service_enable,
+    }
+  }
+  
 
   case $::kernel {
     'Linux': {
