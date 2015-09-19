@@ -11,9 +11,9 @@ class nisclient(
 
   case $::kernel {
     'Linux': {
-      $default_service_name = 'ypbind'
       case $::osfamily {
         'RedHat': {
+          $default_service_name = 'ypbind'
           $default_package_name = 'ypbind'
 
           if $::lsbmajdistrelease == '6' {
